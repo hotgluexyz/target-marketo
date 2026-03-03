@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "target-marketo"
+version = "0.0.1"
+description = "`target-marketo` is a Singer target for marketo, built with the Meltano Singer SDK."
+readme = "README.md"
+authors = ["Hotglue <hello@hotglue.io>"]
+keywords = [
+    "ELT",
+    "marketo",
+]
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "<3.12,>=3.7.1"
+hotglue-singer-sdk = "^1.0.3"
+requests = "^2.31.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.0"
+
+[tool.poetry.extras]
+s3 = ["fs-s3fs"]
+
+[tool.ruff]
+ignore = [
+    "ANN101",  # missing-type-self
+    "ANN102",  # missing-type-cls
+]
+select = ["ALL"]
+src = ["target_marketo"]
+target-version = "py37"
+
+[tool.ruff.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.isort]
+known-first-party = ["target_marketo"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[build-system]
+requires = ["poetry-core>=1.0.8"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+# CLI declaration
+target-marketo = 'target_marketo.target:Targetmarketo.cli'

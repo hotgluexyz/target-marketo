@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "target-marketo",
+            "type": "python",
+            "request": "launch",
+            "program": "../target_marketo/target.py",
+            "cwd": "/Users/hassansyyid/Workspace/targets/target-marketo/.secrets",
+            "args": [
+                "<",
+                "data.singer",
+                "--config",
+                "config.json",
+                ">",
+                "target_state.json"
+            ],
+            "python": "/Users/hassansyyid/Workspace/targets/target-marketo/.venv/bin/python3",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+    ]
+}
