@@ -10,7 +10,7 @@
             "type": "python",
             "request": "launch",
             "program": "../target_marketo/target.py",
-            "cwd": "/Users/hassansyyid/Workspace/targets/target-marketo/.secrets",
+            "cwd": "${workspaceFolder}/.secrets",
             "args": [
                 "<",
                 "data.singer",
@@ -19,7 +19,7 @@
                 ">",
                 "target_state.json"
             ],
-            "python": "/Users/hassansyyid/Workspace/targets/target-marketo/.venv/bin/python3",
+            "python": "${workspaceFolder}/.venv/bin/python3",
             "console": "integratedTerminal",
             "justMyCode": false
         },

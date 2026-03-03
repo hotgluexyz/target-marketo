@@ -1,26 +1,44 @@
-"""Marketo target sink class, which handles writing streams."""
+"""Marketo target sink classes."""
 
 from __future__ import annotations
-import json
+
 from target_marketo.client import MarketoSink
 
+from hotglue_etl_exceptions import InvalidPayloadError
+class LeadsSink(MarketoSink):
+    """Marketo leads sink class."""
 
-class EventsSink(MarketoSink):
-    """Marketo target sink class."""
-    endpoint = "/event"
-    name = "events"
+    endpoint = "/rest/v1/leads.json"
+    name = "leads"
 
-    def preprocess_record(self, record: dict, context: dict):
-        record["key"] = self.config.get("event_key")
-        record["actid"] = self.config.get("account_id")
-        record["visit"] = json.dumps(record.get("visit")) if type(record.get("visit")) == dict else record.get("visit")
-
+    def preprocess_record(self, record: dict, context: dict) -> dict:
+        """Pass through lead record unchanged."""
         return record
 
     def upsert_record(self, record: dict, context: dict):
+        """Create or update one lead record at a time."""
+        payload = {
+            "action": "createOrUpdate",
+            "lookupField": "email",
+            "input": [record],
+        }
         response = self.request_api(
-            "POST", endpoint=self.endpoint, request_data=record
+            "POST",
+            endpoint=self.endpoint,
+            request_data=payload,
         )
+        body = response.json()
+        result = next(iter(body.get("result", [])), None)
+        if not result:
+            raise Exception("No result record found on Marketo API response")
+        state_updates = {}
 
-        # NOTE: hardcoded to return id as 1 because the API does not return an id
-        return 1, response.ok, dict()
+        if result.get("status") not in ["success", "updated"]:
+            raise InvalidPayloadError(str(result.get("reasons", [])))
+
+        if result.get("status") == "updated":
+            state_updates["is_updated"] = True
+
+        return result.get("id"), True, state_updates
+
+

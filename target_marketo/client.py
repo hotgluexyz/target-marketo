@@ -1,38 +1,24 @@
-"""Marketo target sink class, which handles writing streams."""
+"""Marketo target client classes."""
 
 from __future__ import annotations
 
-import backoff
-import requests
 
-from hotglue_singer_sdk.exceptions import RetriableAPIError
 from hotglue_singer_sdk.target_sdk.client import HotglueSink
+
+from target_marketo.auth import MarketoAuthenticator
 
 
 class MarketoSink(HotglueSink):
     """Marketo target sink class."""
 
-    base_url = "https://trackcmp.net"
+    endpoint = ""
+    name = ""
 
-    @backoff.on_exception(
-        backoff.expo,
-        (RetriableAPIError, requests.exceptions.ReadTimeout),
-        max_tries=5,
-        factor=2,
-    )
-    def _request(
-        self, http_method, endpoint, params={}, request_data=None, headers={}, verify=True
-    ) -> requests.PreparedRequest:
-        """Prepare a request object."""
-        url = self.url(endpoint)
-        headers = self.http_headers
+    @property
+    def base_url(self) -> str:
+        """Base URL for Marketo REST API."""
+        return str(self.config["base_url"]).rstrip("/")
 
-        response = requests.request(
-            method=http_method,
-            url=url,
-            params=params,
-            headers=headers,
-            data=request_data,
-        )
-        self.validate_response(response)
-        return response
+    def __init__(self, target, stream_name, schema, key_properties) -> None:
+        super().__init__(target, stream_name, schema, key_properties)
+        self.authenticator = MarketoAuthenticator(target)
