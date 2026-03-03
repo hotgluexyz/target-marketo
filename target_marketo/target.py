@@ -1,4 +1,4 @@
-"""marketo target class."""
+"""Marketo target class."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from target_marketo.sinks import (
 )
 
 
-class Targetmarketo(TargetHotglue):
-    """Sample target for marketo."""
+class TargetMarketo(TargetHotglue):
+    """Sample target for Marketo."""
 
     name = "target-marketo"
 
@@ -24,4 +24,4 @@ class Targetmarketo(TargetHotglue):
     ).to_dict()
 
 if __name__ == "__main__":
-    Targetmarketo.cli()
+    TargetMarketo.cli()

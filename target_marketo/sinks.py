@@ -1,11 +1,12 @@
-"""marketo target sink class, which handles writing streams."""
+"""Marketo target sink class, which handles writing streams."""
 
 from __future__ import annotations
 import json
-from target_marketo.client import marketoSink
+from target_marketo.client import MarketoSink
 
-class EventsSink(marketoSink):
-    """marketo target sink class."""    
+
+class EventsSink(MarketoSink):
+    """Marketo target sink class."""
     endpoint = "/event"
     name = "events"
 

@@ -45,4 +45,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 # CLI declaration
-target-marketo = 'target_marketo.target:Targetmarketo.cli'
+target-marketo = 'target_marketo.target:TargetMarketo.cli'

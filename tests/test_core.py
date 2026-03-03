@@ -7,7 +7,7 @@ import typing as t
 import pytest
 from singer_sdk.testing import get_target_test_class
 
-from target_marketo.target import Targetmarketo
+from target_marketo.target import TargetMarketo
 
 # TODO: Initialize minimal target config
 SAMPLE_CONFIG: dict[str, t.Any] = {}
@@ -15,12 +15,12 @@ SAMPLE_CONFIG: dict[str, t.Any] = {}
 
 # Run standard built-in target tests from the SDK:
 StandardTargetTests = get_target_test_class(
-    target_class=Targetmarketo,
+    target_class=TargetMarketo,
     config=SAMPLE_CONFIG,
 )
 
 
-class TestTargetmarketo(StandardTargetTests):  # type: ignore[misc, valid-type]  # noqa: E501
+class TestTargetMarketo(StandardTargetTests):  # type: ignore[misc, valid-type]  # noqa: E501
     """Standard Target Tests."""
 
     @pytest.fixture(scope="class")

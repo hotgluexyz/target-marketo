@@ -1,4 +1,4 @@
-"""marketo target sink class, which handles writing streams."""
+"""Marketo target sink class, which handles writing streams."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from hotglue_singer_sdk.exceptions import RetriableAPIError
 from hotglue_singer_sdk.target_sdk.client import HotglueSink
 
 
-class marketoSink(HotglueSink):
-    """marketo target sink class."""
+class MarketoSink(HotglueSink):
+    """Marketo target sink class."""
 
     base_url = "https://trackcmp.net"
 
