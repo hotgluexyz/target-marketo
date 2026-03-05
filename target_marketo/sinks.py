@@ -40,5 +40,3 @@ class LeadsSink(MarketoSink):
             state_updates["is_updated"] = True
 
         return result.get("id"), True, state_updates
-
-
