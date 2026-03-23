@@ -32,7 +32,7 @@ class MarketoAuthenticator(Authenticator):
             return 0.0
         if expiry > time.time():
             return expiry
-        return time.time() > expiry
+        return time.time() + expiry
 
     @property
     def _identity_url(self) -> str:
