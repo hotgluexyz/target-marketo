@@ -37,3 +37,7 @@ class MarketoSink(HotglueBatchSink):
     def build_record_hash(self, record: dict) -> str:
         """Match HotglueSink.build_record_hash for bookmark parity with single-record sinks."""
         return hashlib.sha256(json.dumps(record, cls=HGJSONEncoder).encode()).hexdigest()
+
+    def update_state(self, state: dict, is_duplicate: bool = False, record=None) -> None:
+        dup = bool(is_duplicate or state.pop("is_duplicate", False))
+        super().update_state(state, is_duplicate=dup, record=record)

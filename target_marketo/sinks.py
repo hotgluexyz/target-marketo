@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Any, List
 
-from hotglue_etl_exceptions import InvalidPayloadError
+from hotglue_etl_exceptions import InvalidCredentialsError, InvalidPayloadError
 
 from target_marketo.client import MarketoSink
-
 
 class LeadsSink(MarketoSink):
     """Marketo leads sink class."""
@@ -52,10 +51,11 @@ class LeadsSink(MarketoSink):
         state_updates: List[dict] = []
 
         if body.get("success") is False and not results:
-            err = body.get("errors", body)
-            for rec in records:
+            error_items = body.get("errors", body)
+            for i, rec in enumerate(records):
+                error_item = error_items[i] if i < len(error_items) else (error_items[0] if error_items else {})
                 state_updates.append(
-                    self._failed_state(rec, str(err)),
+                    self._failed_state(rec, error_code=int(error_item.get("code")), error_message=error_item.get("message")),
                 )
             return {"state_updates": state_updates}
 
@@ -63,12 +63,12 @@ class LeadsSink(MarketoSink):
             row = results[i] if i < len(results) else None
             if row is None:
                 state_updates.append(
-                    self._failed_state(rec, "No result row from Marketo for this input"),
+                    self._failed_state(rec),
                 )
                 continue
 
             status = row.get("status")
-            if status in ("success", "updated"):
+            if status in ("updated", "created"):
                 st: dict = {
                     "hash": self.build_record_hash(rec),
                     "success": True,
@@ -80,19 +80,40 @@ class LeadsSink(MarketoSink):
                 if ext is not None:
                     st["externalId"] = ext
                 state_updates.append(st)
+            elif status == "skipped":
+                st: dict = {
+                    "hash": self.build_record_hash(rec),
+                    "success": False,
+                    "id": row.get("id"),
+                }
+                st["is_duplicate"] = True
+                ext = rec.get("externalId")
+                if ext is not None:
+                    st["externalId"] = ext
+                state_updates.append(st)
             else:
                 state_updates.append(
-                    self._failed_state(rec, str(row.get("reasons", []))),
+                    self._failed_state(rec, error_code=int(row.get("reasons", [])[0].get("code")), error_message=row.get("reasons", [])[0].get("message")),
                 )
 
         return {"state_updates": state_updates}
 
-    def _failed_state(self, record: dict, error: str) -> dict:
+    def _failed_state(
+        self,
+        record: dict,
+        error_code: int | None = None,
+        error_message: str = "",
+        generic_error: str = "No result row from Marketo for this input",
+    ) -> dict:
+        if error_message:
+            err_text = error_message if error_code is None else f"{error_message} (code {error_code})"
+        else:
+            err_text = generic_error
+
         st = {
             "hash": self.build_record_hash(record),
             "success": False,
-            "error": error,
-            "hg_error_class": InvalidPayloadError.__name__,
+            "error": err_text,
         }
         ext = record.get("externalId")
         if ext is not None:
