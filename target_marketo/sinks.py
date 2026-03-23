@@ -46,55 +46,83 @@ class LeadsSink(MarketoSink):
         records = getattr(self, "_last_batch_input", None) or []
         results = body.get("result") or []
 
-        state_updates: List[dict] = []
-
         if body.get("success") is False and not results:
-            error_items = body.get("errors", body)
-            for i, rec in enumerate(records):
-                error_item = error_items[i] if i < len(error_items) else (error_items[0] if error_items else {})
-                state_updates.append(
-                    self._failed_state(rec, error_code=int(error_item.get("code")), error_message=error_item.get("message")),
-                )
-            return {"state_updates": state_updates}
+            return {"state_updates": self._error_state_updates(records, body)}
 
+        state_updates: List[dict] = []
         for i, rec in enumerate(records):
             row = results[i] if i < len(results) else None
-            if row is None:
-                state_updates.append(
-                    self._failed_state(rec),
-                )
-                continue
-
-            status = row.get("status")
-            if status in ("updated", "created"):
-                st: dict = {
-                    "hash": self.build_record_hash(rec),
-                    "success": True,
-                    "id": row.get("id"),
-                }
-                if status == "updated":
-                    st["is_updated"] = True
-                ext = rec.get("externalId")
-                if ext is not None:
-                    st["externalId"] = ext
-                state_updates.append(st)
-            elif status == "skipped":
-                st: dict = {
-                    "hash": self.build_record_hash(rec),
-                    "success": False,
-                    "id": row.get("id"),
-                }
-                st["is_duplicate"] = True
-                ext = rec.get("externalId")
-                if ext is not None:
-                    st["externalId"] = ext
-                state_updates.append(st)
-            else:
-                state_updates.append(
-                    self._failed_state(rec, error_code=int(row.get("reasons", [])[0].get("code")), error_message=row.get("reasons", [])[0].get("message")),
-                )
+            state_updates.append(self._state_from_result_row(rec, row))
 
         return {"state_updates": state_updates}
+
+    def _error_state_updates(self, records: List[dict], body: dict) -> List[dict]:
+        error_items: Any = body.get("errors") or [body]
+        if not isinstance(error_items, list):
+            error_items = [error_items]
+
+        state_updates: List[dict] = []
+        for i, rec in enumerate(records):
+            error_item = error_items[i] if i < len(error_items) else (error_items[0] if error_items else {})
+            state_updates.append(self._failed_state_from_item(rec, error_item, generic_error="Marketo request failed"))
+        return state_updates
+
+    def _state_from_result_row(self, record: dict, row: dict | None) -> dict:
+        if row is None:
+            return self._failed_state(record)
+
+        status = row.get("status")
+        if status in ("updated", "created"):
+            return self._success_state(record, row, status)
+        if status == "skipped":
+            return self._skipped_state(record, row)
+
+        reasons = row.get("reasons") or []
+        reason = reasons[0] if reasons else {}
+        return self._failed_state_from_item(
+            record,
+            reason,
+            generic_error="Marketo returned an unknown status without reason details",
+        )
+
+    def _success_state(self, record: dict, row: dict, status: str) -> dict:
+        state: dict = {
+            "hash": self.build_record_hash(record),
+            "success": True,
+            "id": row.get("id"),
+        }
+        if status == "updated":
+            state["is_updated"] = True
+        ext = record.get("externalId")
+        if ext is not None:
+            state["externalId"] = ext
+        return state
+
+    def _skipped_state(self, record: dict, row: dict) -> dict:
+        state: dict = {
+            "hash": self.build_record_hash(record),
+            "success": False,
+            "id": row.get("id"),
+            "is_duplicate": True,
+        }
+        ext = record.get("externalId")
+        if ext is not None:
+            state["externalId"] = ext
+        return state
+
+    def _failed_state_from_item(self, record: dict, error_item: Any, generic_error: str) -> dict:
+        item = error_item if isinstance(error_item, dict) else {}
+        code = item.get("code")
+        try:
+            error_code = int(code) if code is not None else None
+        except (TypeError, ValueError):
+            error_code = None
+        return self._failed_state(
+            record,
+            error_code=error_code,
+            error_message=item.get("message") or "",
+            generic_error=generic_error,
+        )
 
     def _failed_state(
         self,
