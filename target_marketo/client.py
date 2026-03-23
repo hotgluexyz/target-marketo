@@ -16,7 +16,7 @@ class MarketoSink(HotglueBatchSink):
 
     endpoint = ""
     name = ""
-    MAX_SIZE_DEFAULT = 3
+    MAX_SIZE_DEFAULT = 300
 
     @property
     def base_url(self) -> str:
