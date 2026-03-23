@@ -2,22 +2,31 @@
 
 from __future__ import annotations
 
+from typing import Optional
 
-from hotglue_singer_sdk.target_sdk.client import HotglueSink
+from pydantic import BaseModel
+
+from hotglue_singer_sdk.target_sdk.client import HotglueBatchSink
 
 from target_marketo.auth import MarketoAuthenticator
 
 
-class MarketoSink(HotglueSink):
+class MarketoSink(HotglueBatchSink):
     """Marketo target sink class."""
 
     endpoint = ""
     name = ""
+    MAX_SIZE_DEFAULT = 300
 
     @property
     def base_url(self) -> str:
         """Base URL for Marketo REST API."""
         return str(self.config["base_url"]).rstrip("/")
+
+    @property
+    def unified_schema(self) -> Optional[BaseModel]:
+        """Not used; required by HotglueBaseSink."""
+        return None
 
     def __init__(self, target, stream_name, schema, key_properties) -> None:
         super().__init__(target, stream_name, schema, key_properties)

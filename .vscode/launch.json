@@ -19,7 +19,7 @@
                 ">",
                 "target_state.json"
             ],
-            "python": "${workspaceFolder}/.venv/bin/python3",
+            "python": "${workspaceFolder}/.venv/bin/python3.10",
             "console": "integratedTerminal",
             "justMyCode": false
         },
