@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Optional
+import hashlib
+import json
 
 from pydantic import BaseModel
 
 from hotglue_singer_sdk.target_sdk.client import HotglueBatchSink
+from hotglue_singer_sdk.target_sdk.common import HGJSONEncoder
 
 from target_marketo.auth import MarketoAuthenticator
 
@@ -24,10 +26,14 @@ class MarketoSink(HotglueBatchSink):
         return str(self.config["base_url"]).rstrip("/")
 
     @property
-    def unified_schema(self) -> Optional[BaseModel]:
+    def unified_schema(self) -> BaseModel:
         """Not used; required by HotglueBaseSink."""
         return None
 
     def __init__(self, target, stream_name, schema, key_properties) -> None:
         super().__init__(target, stream_name, schema, key_properties)
         self.authenticator = MarketoAuthenticator(target)
+
+    def build_record_hash(self, record: dict) -> str:
+        """Match HotglueSink.build_record_hash for bookmark parity with single-record sinks."""
+        return hashlib.sha256(json.dumps(record, cls=HGJSONEncoder).encode()).hexdigest()

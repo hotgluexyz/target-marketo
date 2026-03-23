@@ -17,7 +17,7 @@ class LeadsSink(MarketoSink):
 
 
     def process_batch_record(self, record: dict, index: int) -> dict:
-        """Mirror HotglueSink.process_record: do not send externalId to Marketo; keep originals for state."""
+        """Mirror HotglueSink.process_record: do not send externalId to Marketo; keep originals for state/hash."""
         if index == 0:
             self._batch_originals = []
         self._batch_originals.append(dict(record))
@@ -29,10 +29,10 @@ class LeadsSink(MarketoSink):
         out = dict(record)
         out.pop(key, None)
         return out
-        
+
     def make_batch_request(self, records: List[dict]) -> Any:
         """POST up to MAX_SIZE_DEFAULT leads per request."""
-        self._last_batch_input = records
+        self._last_batch_input = getattr(self, "_batch_originals", None) or records
         return self.request_api(
             "POST",
             endpoint=self.endpoint,
@@ -68,8 +68,9 @@ class LeadsSink(MarketoSink):
                 continue
 
             status = row.get("status")
-            if status in ("created", "success", "updated"):
+            if status in ("success", "updated"):
                 st: dict = {
+                    "hash": self.build_record_hash(rec),
                     "success": True,
                     "id": row.get("id"),
                 }
@@ -88,6 +89,7 @@ class LeadsSink(MarketoSink):
 
     def _failed_state(self, record: dict, error: str) -> dict:
         st = {
+            "hash": self.build_record_hash(record),
             "success": False,
             "error": error,
             "hg_error_class": InvalidPayloadError.__name__,
