@@ -16,6 +16,20 @@ class LeadsSink(MarketoSink):
     name = "leads"
 
 
+    def process_batch_record(self, record: dict, index: int) -> dict:
+        """Mirror HotglueSink.process_record: do not send externalId to Marketo; keep originals for state."""
+        if index == 0:
+            self._batch_originals = []
+        self._batch_originals.append(dict(record))
+        if self.name in self.allows_externalid:
+            return record
+        key = self._target.EXTERNAL_ID_KEY
+        if key not in record:
+            return record
+        out = dict(record)
+        out.pop(key, None)
+        return out
+        
     def make_batch_request(self, records: List[dict]) -> Any:
         """POST up to MAX_SIZE_DEFAULT leads per request."""
         self._last_batch_input = records
