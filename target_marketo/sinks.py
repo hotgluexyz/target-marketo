@@ -79,11 +79,14 @@ class LeadsSink(MarketoSink):
                     st["externalId"] = ext
                 state_updates.append(st)
             else:
-                state_updates.append(
-                    self._failed_state(rec, error_code=int(row.get("reasons", [])[0].get("code")), error_message=row.get("reasons", [])[0].get("message")),
+                st = self._failed_state(
+                    rec, 
+                    error_code=int(row.get("reasons", [])[0].get("code")), \
+                    error_message=row.get("reasons", [])[0].get("message"),
                 )
                 if status == "skipped":
                     st["is_duplicate"] = True
+                state_updates.append(st)
 
         return {"state_updates": state_updates}
 
