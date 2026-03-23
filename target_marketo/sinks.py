@@ -78,21 +78,12 @@ class LeadsSink(MarketoSink):
                 if ext is not None:
                     st["externalId"] = ext
                 state_updates.append(st)
-            elif status == "skipped":
-                st: dict = {
-                    "hash": self.build_record_hash(rec),
-                    "success": False,
-                    "id": row.get("id"),
-                }
-                st["is_duplicate"] = True
-                ext = rec.get("externalId")
-                if ext is not None:
-                    st["externalId"] = ext
-                state_updates.append(st)
             else:
                 state_updates.append(
                     self._failed_state(rec, error_code=int(row.get("reasons", [])[0].get("code")), error_message=row.get("reasons", [])[0].get("message")),
                 )
+                if status == "skipped":
+                    st["is_duplicate"] = True
 
         return {"state_updates": state_updates}
 
