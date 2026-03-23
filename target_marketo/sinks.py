@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any, List
 
-from hotglue_etl_exceptions import InvalidCredentialsError, InvalidPayloadError
-
 from target_marketo.client import MarketoSink
 
 class LeadsSink(MarketoSink):
