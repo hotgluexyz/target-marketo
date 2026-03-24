@@ -6,6 +6,9 @@ from typing import Any, List
 
 from target_marketo.client import MarketoSink
 
+from hotglue_singer_sdk.exceptions import FatalAPIError
+from hotglue_etl_exceptions import InvalidCredentialsError, InvalidPayloadError
+
 class LeadsSink(MarketoSink):
     """Marketo leads sink class."""
 
@@ -110,4 +113,13 @@ class LeadsSink(MarketoSink):
         ext = record.get("externalId")
         if ext is not None:
             st["externalId"] = ext
+
+        
+        if error_code in (601, 602, 603):
+            st["hg_error_class"] = InvalidCredentialsError.__name__
+        elif error_code >= 1000:
+            st["hg_error_class"] = InvalidPayloadError.__name__
+        else:
+            st["hg_error_class"] = FatalAPIError.__name__
+        
         return st
