@@ -115,8 +115,10 @@ class LeadsSink(MarketoSink):
             st["externalId"] = ext
 
         
-        if error_code in (601, 602, 603):
+        if error_code is not None and error_code == 603:
             st["hg_error_class"] = InvalidCredentialsError.__name__
+        elif error_code in (601, 602):
+            st["hg_error_class"] = FatalAPIError.__name__
         elif error_code is not None and error_code >= 1000:
             st["hg_error_class"] = InvalidPayloadError.__name__
         else:
