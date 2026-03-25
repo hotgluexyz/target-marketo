@@ -1,5 +1,9 @@
 # Secrets and internal config files
 .secrets/*
+.vscode/*
+
+.DS_Store
+**/.DS_Store
 
 # Ignore meltano internal cache and sqlite systemdb
 
