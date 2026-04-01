@@ -48,7 +48,7 @@ class MarketoAuthenticator(OAuthAuthenticator):
 
         request_time = int(utils.now().timestamp())
         auth_request_payload = self.oauth_request_payload
-        token_response = requests.post(self.auth_endpoint, data=auth_request_payload)
+        token_response = requests.post(self.auth_endpoint, data=auth_request_payload,  timeout=30)
         try:
             token_response.raise_for_status()
             token_text = token_response.text or ""
@@ -88,7 +88,6 @@ class MarketoAuthenticator(OAuthAuthenticator):
         Returns:
             True if the token is valid (fresh).
         """
-        # if expires_in is not set, try to get it from the tap config
         if self.expires_in is None and self._config.get("expires_in"):
             self.expires_in = self._config.get("expires_in")
 
